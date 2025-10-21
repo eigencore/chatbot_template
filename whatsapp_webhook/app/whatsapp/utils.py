@@ -50,7 +50,7 @@ def _extract_msg(body):
     text = msg.get("text", {}).get("body", "").strip()
     return wa_id, name, msg_id, ts_ms, text
 
-async def verify(request: Request, orm: AsyncPGORM):
+async def verify(request: Request):
     mode = request.query_params.get("hub.mode")
     token = request.query_params.get("hub.verify_token")
     challenge = request.query_params.get("hub.challenge")
@@ -81,23 +81,23 @@ async def handle_message(request: Request, background: BackgroundTasks | None = 
     if not is_valid_whatsapp_message(body):
         return JSONResponse({"status": "error", "message": "Not a WhatsApp API event"}, status_code=status.HTTP_404_NOT_FOUND)
 
-    # ---- Debounce + Buffer ----
-    r = await get_redis()
+    # # ---- Debounce + Buffer ----
+    # r = await get_redis()
     wa_id, name, msg_id, ts_ms, text = _extract_msg(body)
     
-    # Check if user exists in DB (example usage of ORM)
+    # # Check if user exists in DB (example usage of ORM)
     
     logging.info(f"Received message from {wa_id} ({name}): {text}")
 
-    # # Idempotencia: ignora reintentos del mismo msg_id
-    was_set = await r.set(_k_dedup(msg_id), "1", nx=True, ex=DEDUP_TTL_S)
-    if not was_set:
-        return JSONResponse({"status": "ok"}, status_code=status.HTTP_200_OK)
+    # # # Idempotencia: ignora reintentos del mismo msg_id
+    # was_set = await r.set(_k_dedup(msg_id), "1", nx=True, ex=DEDUP_TTL_S)
+    # if not was_set:
+    #     return JSONResponse({"status": "ok"}, status_code=status.HTTP_200_OK)
 
-    # Mete al buffer como JSONL
-    item = json.dumps({"id": msg_id, "ts": ts_ms, "text": text})
-    await r.rpush(_k_buf(wa_id), item)
-    await r.expire(_k_buf(wa_id), DEDUP_TTL_S)
+    # # Mete al buffer como JSONL
+    # item = json.dumps({"id": msg_id, "ts": ts_ms, "text": text})
+    # await r.rpush(_k_buf(wa_id), item)
+    # await r.expire(_k_buf(wa_id), DEDUP_TTL_S)
 
     # # (Re)programa timer (guardamos el fireAt en ms)
     fire_at = int(time.time() * 1000) + WINDOW_MS
