@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
+from uuid import uuid4
 
 from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
@@ -16,12 +18,17 @@ class User(TimestampMixin, Base):
 
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        primary_key=True,
+        default=lambda: str(uuid4()),
+        unique=True,
+        nullable=False,
+    )
     phone_number: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
-    email: Mapped[Optional[str]] = mapped_column(String(255), unique=True)
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
-
-    conversations: Mapped[list["Conversation"]] = relationship(
+    email: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
+    name: Mapped[Optional[str]] = mapped_column(String(128), nullable=False)
+    conversation: Mapped[list["Conversation"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

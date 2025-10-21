@@ -43,13 +43,13 @@ def get_database_url() -> str | None:
     if url := os.getenv("DATABASE_URL"):
         return url
 
-    host = os.getenv("BD_HOST")
-    user = os.getenv("BD_USER")
-    password = os.getenv("BD_PASSWORD")
-    name = os.getenv("BD_NAME")
-    driver = os.getenv("BD_DRIVER", "postgresql")
+    host = os.getenv("DB_HOST")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+    name = os.getenv("DB_NAME")
+    driver = os.getenv("DB_DRIVER", "postgresql")
 
-    port_raw = os.getenv("BD_PORT")
+    port_raw = os.getenv("DB_PORT")
     port = int(port_raw) if port_raw else None
 
     if not (host and user and name):
