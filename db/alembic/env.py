@@ -8,8 +8,7 @@ from sqlalchemy.engine import URL
 
 from alembic import context
 
-from app.models import Base
-
+from models import metadata
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -71,7 +70,7 @@ if database_url := get_database_url():
     config.set_main_option("sqlalchemy.url", database_url)
 
 # Register project metadata for autogeneration.
-target_metadata = Base.metadata
+target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
