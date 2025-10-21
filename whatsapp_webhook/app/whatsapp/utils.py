@@ -96,20 +96,20 @@ async def handle_message(request: Request, background: BackgroundTasks | None = 
 
     # Mete al buffer como JSONL
     item = json.dumps({"id": msg_id, "ts": ts_ms, "text": text})
-    # await r.rpush(_k_buf(wa_id), item)
-    # await r.expire(_k_buf(wa_id), DEDUP_TTL_S)
+    await r.rpush(_k_buf(wa_id), item)
+    await r.expire(_k_buf(wa_id), DEDUP_TTL_S)
 
     # # (Re)programa timer (guardamos el fireAt en ms)
-    # fire_at = int(time.time() * 1000) + WINDOW_MS
+    fire_at = int(time.time() * 1000) + WINDOW_MS
     # # Timer con expiración: si no llega nada, expira solo
-    # await r.psetex(_k_timer(wa_id), WINDOW_MS + TIMER_GRACE_MS, str(fire_at))
+    await r.psetex(_k_timer(wa_id), WINDOW_MS + TIMER_GRACE_MS, str(fire_at))
 
     # # Dispara verificación luego de la ventana
-    # if background is not None:
-    #     background.add_task(_schedule_try_process, wa_id, WINDOW_MS)
-    # else:
-    #     # fallback si llamas sin BackgroundTasks
-    #     asyncio.create_task(_schedule_try_process(wa_id, WINDOW_MS))
+    if background is not None:
+        background.add_task(_schedule_try_process, wa_id, WINDOW_MS)
+    else:
+        # fallback si llamas sin BackgroundTasks
+        asyncio.create_task(_schedule_try_process(wa_id, WINDOW_MS))
 
     return JSONResponse({"status": "ok"}, status_code=status.HTTP_200_OK)
 
